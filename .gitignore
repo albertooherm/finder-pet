@@ -33,6 +33,7 @@ dist-ssr
 # Testing
 coverage/
 .nyc_output
+*.lcov
 
 # Build outputs
 build/

@@ -1,6 +1,7 @@
+import React from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { BrowserRouter as Router } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -12,25 +13,72 @@ import {
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { queryClient } from '@/lib/query-client';
+import { useAuthStore } from '@/infrastructure/stores/authStore';
+import { AuthPage } from '@/pages/AuthPage';
+import { ProfileForm } from '@/components/profile/ProfileForm';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-function App() {
+function AppContent() {
+  const { user, loading, initialize } = useAuthStore();
+
+  // Initialize auth on mount
+  React.useEffect(() => {
+    initialize();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthPage />;
+  }
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-          <div className="container mx-auto px-4 py-8">
-            <Card className="max-w-4xl mx-auto">
-              <CardHeader>
-                <CardTitle className="text-3xl font-bold text-center text-gray-800 dark:text-white">
-                  🐾 Finder Pet - Configuración Completada
+    <Router>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/profile" element={<ProfileForm />} />
+      </Routes>
+    </Router>
+  );
+}
+
+function Dashboard() {
+  const { user, profile, signOut } = useAuthStore();
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="container mx-auto px-4 py-8">
+        <Card className="max-w-4xl mx-auto">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="text-3xl font-bold text-gray-800 dark:text-white">
+                  🐾 Finder Pet - Dashboard
                 </CardTitle>
-                <CardDescription className="text-center text-gray-600 dark:text-gray-300">
-                  Todas las librerías han sido instaladas y configuradas
-                  correctamente
+                <CardDescription className="text-gray-600 dark:text-gray-300">
+                  ¡Bienvenido, {profile?.name || user.email}!
                 </CardDescription>
-              </CardHeader>
+              </div>
+              <div className="flex items-center space-x-4">
+                <Button variant="outline" onClick={() => window.location.href = '/profile'}>
+                  Mi Perfil
+                </Button>
+                <Button variant="destructive" onClick={signOut}>
+                  Cerrar Sesión
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
               <CardContent>
                 <Tabs defaultValue="libraries" className="w-full">
                   <TabsList className="grid w-full grid-cols-3">
@@ -236,7 +284,15 @@ function App() {
             </Card>
           </div>
         </div>
-      </Router>
+      </Card>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppContent />
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );

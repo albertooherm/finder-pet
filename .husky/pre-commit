@@ -1,4 +1,7 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+echo "🔍 Ejecutando lint-staged..."
 npx lint-staged
+
+echo "✅ Pre-commit completado exitosamente!"
